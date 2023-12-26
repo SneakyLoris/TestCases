@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,29 +14,42 @@ namespace WeatherData
 {
     public partial class Form1 : Form
     {
-        // токен для подключения к API
+        // токен для подключения к openweatherAPI
         static string APIkey = "d09ac650ab9ce38049779f4aef823612";
 
-        static string APIcall = $"https://api.openweathermap.org/data/2.5/weather?q={"Москва"}&appid={APIkey}";
         public Form1()
         {
             InitializeComponent();
         }
 
+        // Обработчик нажатия на кнопку поиска данных о погоде
         private void button1_Click(object sender, EventArgs e)
         {
             string country = searchText.Text;
 
-            if (country.Trim() != null)
+            // Обработчик ошибок, связанных с ошибкой 404, например, неправильно ввели название города или сервер не отвечает
+            try
             {
+                // Строка запроса с введенным в TextBox городом и ключом, который выдал сайт openweathermap.org
+                string APIaddress = $"https://api.openweathermap.org/data/2.5/weather?q={country}&appid={APIkey}";
+
+                // Создаем экземпляр класса GetRequest, с помощью которого мы получим необходимые нам данные
+                var request = new GetRequest(APIaddress);
+                request.Run();
+
+                var response = request.Response;
+
+                var json = JObject.Parse(response);
+
+                descriptionText.Text = (string)json["weather"][0]["description"];
+                temperatureText.Text = (string)json["main"]["temp"];
+                speedText.Text = (string)json["wind"]["speed"];
 
             }
-        }
-
-        private void GetResponse(string country)
-        {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(APIcall);
-            HttpWebRequest response = 
+            catch 
+            {
+                MessageBox.Show("Город не найден!", "O_o", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
