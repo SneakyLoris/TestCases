@@ -37,10 +37,13 @@ namespace WeatherData
                 var request = new GetRequest(APIaddress);
                 request.Run();
 
+                // Результат запроса
                 var response = request.Response;
 
+                // Переводим полученные данные с API в json формат
                 var json = JObject.Parse(response);
 
+                // Заполняем текстовые поля, которые необходимы по заданию
                 descriptionText.Text = (string)json["weather"][0]["description"];
                 temperatureText.Text = (string)json["main"]["temp"];
                 speedText.Text = (string)json["wind"]["speed"];
@@ -48,6 +51,7 @@ namespace WeatherData
             }
             catch 
             {
+                // Оповещение пользователся, что он неправильно ввел город
                 MessageBox.Show("Город не найден!", "O_o", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
