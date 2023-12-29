@@ -12,13 +12,13 @@ namespace SqlRequests
 {
     public static class DbHelper
     {
-        private static SqlConnection _conn;
-
+        // localhost\\SQLEXPRESS
+        private static SqlConnection conn = new SqlConnection(@"Data Source = localhost\SQLEXPRESS;Initial Catalog = 'market';Integrated Security=True;Connect Timeout=10;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
         public static bool Connect(string connString)
         {
             try
             {
-                _conn = new SqlConnection(connString);
+                conn = new SqlConnection(connString);
                 return true;
             }
             catch
@@ -29,54 +29,127 @@ namespace SqlRequests
 
         private static void ExecuteNonQuery(SqlCommand cmd)
         {
-            _conn.Open();
+            conn.Open();
 
-                if (_conn.State == ConnectionState.Open)
+                if (conn.State == ConnectionState.Open)
                 {
-                    cmd.Connection = _conn;
+                    cmd.Connection = conn;
                     cmd.ExecuteNonQuery();
                 }
 
-            _conn.Close();
-
+            conn.Close();
         }
 
-        private static void ExecuteQueryPC(SqlCommand cmd, out BindingList<Product> comp)
+
+        public static List<string> Task1()
         {
-            comp = new BindingList<Product>();
+            List<string> list = new List<string>();
 
-            _conn.Open();
-
-            if (_conn.State == ConnectionState.Open)
-            {
-                cmd.Connection = _conn;
-
-                var dr = cmd.ExecuteReader();
-                if (dr.HasRows)
-                {
-                    while (dr.Read())
-                    {
-                        comp.Add(new Product(
-                            dr.GetInt32(0),
-                            dr.GetString(1),
-                            dr.GetFloat(2),
-                            dr.GetInt32(3)
-                        ));
-                    }
-                }
-            }
-            _conn.Close();
-        }
-
-        public static BindingList<Product> GetDataPC()
-        {
-            BindingList<Product> comp;
             SqlCommand cmd = new SqlCommand();
-            var query = "SELECT * FROM Computer;";
+            var query = "SELECT * FROM Managers WHERE phone IS NOT NULL";
             cmd.CommandText = query;
 
-            ExecuteQueryPC(cmd, out comp);
-            return comp;
+
+
+            conn.Open();
+
+            if (conn.State == ConnectionState.Open)
+            {
+                cmd.Connection = conn;
+
+                var reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                    while (reader.Read())
+                        if (!reader.IsDBNull(reader.GetOrdinal("Phone")))
+                            list.Add($"{reader.GetInt32(0)} {reader.GetString(1)} {reader.GetDouble(2)} {reader.GetInt32(3)} {reader.GetString(4)}");
+                        else
+                            list.Add($"{reader.GetInt32(0)} {reader.GetString(1)} {reader.GetDouble(2)} {reader.GetInt32(3)} NULL");
+
+            }
+            conn.Close();
+
+
+            return list;
+        }
+
+        public static int Task2()
+        {
+            int count = 0;
+
+            SqlCommand cmd = new SqlCommand();
+            var query = "SELECT COUNT(ID) FROM Sells WHERE Date = '2021-06-20'";
+            cmd.CommandText= query;
+
+            conn.Open();
+
+            if (conn.State == ConnectionState.Open)
+            {
+                cmd.Connection = conn;
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                    count = reader.GetInt32(0);
+            }
+            
+
+            conn.Close();
+
+            return count;
+        }
+        public static double Task3()
+        {
+            double mean = 0;
+
+            SqlCommand cmd = new SqlCommand();
+            // Считаю что это не совсем верный запрос, так как может быть несколько фанер под разными id, но я не знаю пока как написать по-другому
+            var query = "SELECT AVG(Sum) FROM Sells WHERE ID_Prod IN (SELECT ID FROM Products WHERE Name LIKE '%Фанера%')";
+            cmd.CommandText = query;
+
+            conn.Open();
+
+            if (conn.State == ConnectionState.Open)
+            {
+                cmd.Connection = conn;
+
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                    mean = reader.GetDouble(0);
+            }
+
+
+            conn.Close();
+
+            return mean;
+        }
+
+        public static List<string> Task6()
+        {
+            List<string> list = new List<string>();
+
+            SqlCommand cmd = new SqlCommand();
+            var query = "SELECT * FROM Products WHERE Name LIKE '%Фанера%' AND Cost >= 1750";
+            cmd.CommandText = query;
+
+
+            conn.Open();
+
+            if (conn.State == ConnectionState.Open)
+            {
+                cmd.Connection = conn;
+
+                var reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                    while (reader.Read())
+                        if (!reader.IsDBNull(reader.GetOrdinal("Phone")))
+                            list.Add($"{reader.GetInt32(0)} {reader.GetString(1)} {reader.GetDouble(2)} {reader.GetInt32(3)} {reader.GetString(4)}");
+                        else
+                            list.Add($"{reader.GetInt32(0)} {reader.GetString(1)} {reader.GetDouble(2)} {reader.GetInt32(3)} NULL");
+
+            }
+            conn.Close();
+
+
+            return list;
         }
     }
 }
